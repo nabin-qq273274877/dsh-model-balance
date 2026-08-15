@@ -1,6 +1,6 @@
 {
   "name": "dsh-model-balance",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Multi-provider account balance display for the DeepSeek Harness Web GUI. Queries real billing APIs (DeepSeek, StepFun, Kimi Coding, OpenRouter, MiniMax, xAI) and shows balance/quota in front of the model selector. Providers without an API-level billing endpoint show a clear 'Balance unavailable' state.",
   "type": "module",
   "main": "lib/index.js",
@@ -13,6 +13,18 @@
     "./package.json": "./package.json"
   },
   "dsh": {
+    "plugin": {
+      "schemaVersion": 1,
+      "displayName": {
+        "zh-CN": "模型余额",
+        "en": "Model Balance"
+      },
+      "summary": {
+        "zh-CN": "在模型选择器前显示多供应商真实账户余额与配额",
+        "en": "Show real multi-provider account balance and quota in front of the model selector"
+      },
+      "category": "balance"
+    },
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
