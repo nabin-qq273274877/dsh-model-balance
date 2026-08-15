@@ -2,7 +2,7 @@
  * dsh-model-balance client half.
  *
  * Renders a balance pill in the composer's `conversation.input.right` slot
- * (immediately left of the model selector).  Fetches the real account
+ * (immediately beside the model selector).  Fetches the real account
  * balance from the host route registered by the host half.
  *
  * Refresh triggers:
@@ -12,22 +12,20 @@
  *  - click (bypasses host cache)
  */
 
+import * as React from "react"
+import { jsx } from "react/jsx-runtime"
 import type { BalanceQueryResult } from "../types.js"
 
 // ---------------------------------------------------------------------------
-// Icons (plain JS SVG helpers, no JSX)
+// Icons (react/jsx-runtime elements)
 // ---------------------------------------------------------------------------
 
-const h = (
-  type: string,
-  props: Record<string, unknown> | null,
-  ...children: unknown[]
-) => ({ type, props: props ?? {}, children })
-
 function CoinIcon() {
-  return h("svg", { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
-    h("circle", { cx: 7, cy: 7, r: 6.1, fill: "none", stroke: "currentColor", strokeWidth: 1.2 }),
-    h("path", {
+  return jsx(
+    "svg",
+    { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
+    jsx("circle", { cx: 7, cy: 7, r: 6.1, fill: "none", stroke: "currentColor", strokeWidth: 1.2 }),
+    jsx("path", {
       d: "M4.7 4.1 7 6.9l2.3-2.8M7 6.9v3.4M5.3 8h3.4M5.3 9.7h3.4",
       fill: "none", stroke: "currentColor", strokeWidth: 1.1,
       strokeLinecap: "round", strokeLinejoin: "round",
@@ -36,12 +34,14 @@ function CoinIcon() {
 }
 
 function GaugeIcon() {
-  return h("svg", { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
-    h("path", {
+  return jsx(
+    "svg",
+    { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
+    jsx("path", {
       d: "M2.2 10.2a4.8 4.8 0 1 1 9.6 0",
       fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round",
     }),
-    h("path", {
+    jsx("path", {
       d: "M7 10.2 9.4 7.2",
       fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round",
     }),
@@ -49,13 +49,15 @@ function GaugeIcon() {
 }
 
 function WarnIcon() {
-  return h("svg", { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
-    h("path", {
+  return jsx(
+    "svg",
+    { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
+    jsx("path", {
       d: "M7 2 12.6 11.6H1.4L7 2Z",
       fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinejoin: "round",
     }),
-    h("path", { d: "M7 5.8v2.6", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round" }),
-    h("circle", { cx: 7, cy: 10, r: 0.7, fill: "currentColor" }),
+    jsx("path", { d: "M7 5.8v2.6", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round" }),
+    jsx("circle", { cx: 7, cy: 10, r: 0.7, fill: "currentColor" }),
   )
 }
 
@@ -120,20 +122,22 @@ interface QueryState {
 
 /**
  * Render a `<button>` that displays the real balance of the current model's
- * provider account, or "余额不可查" / "查询失败" when appropriate.
+ * provider account, or "暂不支持" / "查询失败" when appropriate.
+ *
+ * Props come from the slot system:
+ *  - `directory`: SnapshotStore<ModelDirectoryState> (from inject)
+ *  - `session`: ConversationSnapshot (owner share — has `running`)
+ *  - `t`: locale translator (slot locale)
  */
 function BalancePill(props: any) {
-  const { directory, useSession, t } = props
-  const { useSyncExternalStore, useState, useRef, useEffect, useCallback } =
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    (globalThis as any).__dsh_react ?? require("react")
-  const reactJsx = (globalThis as any).__dsh_jsx ?? (() => null)
+  const { directory, session, t } = props
+  const { useSyncExternalStore, useState, useRef, useEffect, useCallback } = React
 
   const state = useSyncExternalStore(
     (fn: () => void) => directory.subscribe(fn),
     () => directory.getSnapshot(),
   )
-  const running = useSession((s: any) => s.running) ?? false
+  const running = session?.running ?? false
   const current = state.current
   const provider: string | null = current === null ? null : current.provider
   const groupName =
@@ -215,49 +219,52 @@ function BalancePill(props: any) {
 
   // --- Idle / loading ---
   if (query.status === "idle" || query.status === "loading") {
-    return reactJsx("div", {
-      className: CLS.root,
-      "data-tone": "dim",
-      title: t("tooltip.loading", { provider: groupName }),
-      children: [
-        reactJsx("span", { className: CLS.icon, children: reactJsx(CoinIcon, {}) }),
-        reactJsx("span", { children: t("pill.querying") }),
-      ],
-    })
+    return jsx(
+      "div",
+      {
+        className: CLS.root,
+        "data-tone": "dim",
+        title: t("tooltip.loading", { provider: groupName }),
+      },
+      jsx("span", { className: CLS.icon }, jsx(CoinIcon, {})),
+      jsx("span", {}, t("pill.querying")),
+    )
   }
 
   // --- Error ---
   if (query.status === "error") {
-    return reactJsx("button", {
-      type: "button",
-      className: CLS.root,
-      "data-tone": "error",
-      title: t("tooltip.error", { message: query.message }),
-      "aria-label": t("aria.error", { provider: groupName, message: query.message }),
-      onClick: () => runQuery(provider, true),
-      children: [
-        reactJsx("span", { className: CLS.icon, children: reactJsx(WarnIcon, {}) }),
-        reactJsx("span", { children: t("pill.error") }),
-      ],
-    })
+    return jsx(
+      "button",
+      {
+        type: "button",
+        className: CLS.root,
+        "data-tone": "error",
+        title: t("tooltip.error", { message: query.message }),
+        "aria-label": t("aria.error", { provider: groupName, message: query.message }),
+        onClick: () => runQuery(provider, true),
+      },
+      jsx("span", { className: CLS.icon }, jsx(WarnIcon, {})),
+      jsx("span", {}, t("pill.error")),
+    )
   }
 
   const value = query.value!
 
   // --- Unqueryable ---
   if (value.queryable === false) {
-    return reactJsx("button", {
-      type: "button",
-      className: CLS.root,
-      "data-tone": "error",
-      title: t("tooltip.unqueryable", { provider: groupName }),
-      "aria-label": t("aria.unqueryable", { provider: groupName }),
-      onClick: () => runQuery(provider, true),
-      children: [
-        reactJsx("span", { className: CLS.icon, children: reactJsx(WarnIcon, {}) }),
-        reactJsx("span", { children: t("pill.unqueryable") }),
-      ],
-    })
+    return jsx(
+      "button",
+      {
+        type: "button",
+        className: CLS.root,
+        "data-tone": "error",
+        title: t("tooltip.unqueryable", { provider: groupName }),
+        "aria-label": t("aria.unqueryable", { provider: groupName }),
+        onClick: () => runQuery(provider, true),
+      },
+      jsx("span", { className: CLS.icon }, jsx(WarnIcon, {})),
+      jsx("span", {}, t("pill.unqueryable")),
+    )
   }
 
   // --- Quota ---
@@ -272,27 +279,28 @@ function BalancePill(props: any) {
       remaining: value.remaining,
       limit: value.limit,
     })
-    return reactJsx("button", {
-      type: "button",
-      className: CLS.root,
-      ...(tone !== undefined ? { "data-tone": tone } : {}),
-      title: t("tooltip.quota", {
-        provider: groupName,
-        remaining: value.remaining,
-        limit: value.limit,
-        reset: value.resetTime !== undefined ? formatReset(value.resetTime) : "?",
-      }),
-      "aria-label": t("aria.quota", {
-        provider: groupName,
-        remaining: value.remaining,
-        limit: value.limit,
-      }),
-      onClick: () => runQuery(provider, true),
-      children: [
-        reactJsx("span", { className: CLS.icon, children: reactJsx(GaugeIcon, {}) }),
-        reactJsx("span", { children: quotaText }),
-      ],
-    })
+    return jsx(
+      "button",
+      {
+        type: "button",
+        className: CLS.root,
+        ...(tone !== undefined ? { "data-tone": tone } : {}),
+        title: t("tooltip.quota", {
+          provider: groupName,
+          remaining: value.remaining,
+          limit: value.limit,
+          reset: value.resetTime !== undefined ? formatReset(value.resetTime) : "?",
+        }),
+        "aria-label": t("aria.quota", {
+          provider: groupName,
+          remaining: value.remaining,
+          limit: value.limit,
+        }),
+        onClick: () => runQuery(provider, true),
+      },
+      jsx("span", { className: CLS.icon }, jsx(GaugeIcon, {})),
+      jsx("span", {}, quotaText),
+    )
   }
 
   // --- Currency ---
@@ -301,24 +309,25 @@ function BalancePill(props: any) {
   const tone =
     value.balance <= 0.005 ? "error" : value.balance < 20 ? "warn" : undefined
 
-  return reactJsx("button", {
-    type: "button",
-    className: CLS.root,
-    ...(tone !== undefined ? { "data-tone": tone } : {}),
-    title: t("tooltip.currency", {
-      provider: groupName,
-      balance: value.balance.toFixed(2),
-    }),
-    "aria-label": t("aria.currency", {
-      provider: groupName,
-      balance: value.balance.toFixed(2),
-    }),
-    onClick: () => runQuery(provider, true),
-    children: [
-      reactJsx("span", { className: CLS.icon, children: reactJsx(CoinIcon, {}) }),
-      reactJsx("span", { children: balanceText }),
-    ],
-  })
+  return jsx(
+    "button",
+    {
+      type: "button",
+      className: CLS.root,
+      ...(tone !== undefined ? { "data-tone": tone } : {}),
+      title: t("tooltip.currency", {
+        provider: groupName,
+        balance: value.balance.toFixed(2),
+      }),
+      "aria-label": t("aria.currency", {
+        provider: groupName,
+        balance: value.balance.toFixed(2),
+      }),
+      onClick: () => runQuery(provider, true),
+    },
+    jsx("span", { className: CLS.icon }, jsx(CoinIcon, {})),
+    jsx("span", {}, balanceText),
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -373,22 +382,22 @@ export function apply(ctx: any): void {
     "model-balance: dictionaries",
   )
 
-  const directories = ctx.modelDirectories
+  ctx.inject(["slots", "modelDirectories"], (scope: any) => {
+    const models = scope.modelDirectories
 
-  ctx.slots.inject("conversation.input.right", () =>
-    ctx.slots.register(
-      {
-        name: "conversation.input.right",
-        id: "model-balance",
-        order: 100,
-        locale: NS,
-        inject: (sessionId: string) => ({
-          directory: directories.directoryFor(sessionId).store,
-        }),
-      },
-      BalancePill,
-    ),
-  )
+    scope.slots.inject("conversation.input.right", () =>
+      scope.slots.register(
+        {
+          name: "conversation.input.right",
+          locale: NS,
+          inject: (sessionId: string) => ({
+            directory: models.directoryFor(sessionId).store,
+          }),
+        },
+        BalancePill,
+      ),
+    )
+  })
 }
 
 export { BalancePill }
