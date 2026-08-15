@@ -1,0 +1,69 @@
+{
+  "name": "dsh-model-balance",
+  "version": "0.1.0",
+  "description": "Multi-provider account balance display for the DeepSeek Harness Web GUI. Queries real billing APIs (DeepSeek, StepFun, Kimi Coding, OpenRouter, MiniMax, xAI) and shows balance/quota in front of the model selector. Providers without an API-level billing endpoint show a clear 'Balance unavailable' state.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-model-selection"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib",
+    "src",
+    "cordis.patch.yml",
+    "README.md",
+    "README.en.md",
+    "providers.json",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "build:watch": "tsx watch scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit && vitest run",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "balance",
+    "quota",
+    "billing",
+    "multi-provider"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nabin-qq273274877/dsh-model-balance.git"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "@types/react": "^18.3.0",
+    "esbuild": "^0.25.0",
+    "esbuild-wasm": "^0.28.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

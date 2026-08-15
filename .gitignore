@@ -1,0 +1,7 @@
+node_modules/
+.pnpm-store/
+lib/
+*.tsbuildinfo
+.DS_Store
+# User's custom providers config (keep example)
+providers.json
