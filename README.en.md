@@ -31,21 +31,29 @@ Shows a balance pill **in front of the model selector** in the composer. Switch 
 
 The pill renders four states depending on the provider type:
 
-<table>
-  <tr align="center">
-    <td width="50%"><img src="docs/images/currency.png" alt="Currency balance" width="380"><br><b>Currency balance</b></td>
-    <td width="50%"><img src="docs/images/quota.png" alt="Quota percentage" width="380"><br><b>Quota percentage</b></td>
-  </tr>
-  <tr align="center">
-    <td><img src="docs/images/login-required.png" alt="Login to view" width="380"><br><b>Login to view</b></td>
-    <td><img src="docs/images/unqueryable.png" alt="Not supported" width="380"><br><b>Not supported</b></td>
-  </tr>
-</table>
+### Currency balance
 
-- **Currency balance**: DeepSeek, StepFun, OpenRouter, xAI, etc. show the account balance directly (click to refresh).
-- **Quota percentage**: Kimi Coding shows both the 7-day weekly quota and the 5-hour rate-limit as remaining percentages (hover for request counts and reset time).
-- **Login to view**: Qwen (Bailian Token Plan) and Xiaomi MiMo have no API balance endpoint — clicking opens the console in a **new page**.
-- **Not supported**: providers with neither an API endpoint nor a public console entry.
+<p align="center"><img src="docs/images/currency.png" alt="Currency balance" width="720"></p>
+
+DeepSeek, StepFun, OpenRouter, xAI, etc. show the account balance directly (click to refresh).
+
+### Quota percentage
+
+<p align="center"><img src="docs/images/quota.png" alt="Quota percentage" width="720"></p>
+
+Kimi Coding shows both the 7-day weekly quota and the 5-hour rate-limit as remaining percentages (hover for request counts and reset time).
+
+### Login to view
+
+<p align="center"><img src="docs/images/login-required.png" alt="Login to view" width="720"></p>
+
+Qwen (Bailian Token Plan) and Xiaomi MiMo have no API balance endpoint — clicking opens the console in a **new page**.
+
+### Not supported
+
+<p align="center"><img src="docs/images/unqueryable.png" alt="Not supported" width="720"></p>
+
+Providers with neither an API endpoint nor a public console entry.
 
 ## How It Works
 

@@ -31,21 +31,29 @@
 
 胶囊根据供应商类型显示四种状态：
 
-<table>
-  <tr align="center">
-    <td width="50%"><img src="docs/images/currency.png" alt="金额余额" width="380"><br><b>金额余额</b></td>
-    <td width="50%"><img src="docs/images/quota.png" alt="额度百分比" width="380"><br><b>额度百分比</b></td>
-  </tr>
-  <tr align="center">
-    <td><img src="docs/images/login-required.png" alt="登录查看" width="380"><br><b>登录查看</b></td>
-    <td><img src="docs/images/unqueryable.png" alt="暂不支持" width="380"><br><b>暂不支持</b></td>
-  </tr>
-</table>
+### 金额余额
 
-- **金额余额**：DeepSeek、StepFun、OpenRouter、xAI 等按金额计费的供应商，直接显示账户余额（点击刷新）。
-- **额度百分比**：Kimi Coding 同时显示「7 天周额度」与「5 小时速率额度」的剩余百分比（鼠标悬停可看剩余次数与重置时间）。
-- **登录查看**：千问（百炼 Token Plan）、小米 MiMo 等无 API 余额接口，点击在**新页面**打开对应控制台。
-- **暂不支持**：既无 API 接口也无公开控制台入口的供应商。
+<p align="center"><img src="docs/images/currency.png" alt="金额余额" width="720"></p>
+
+DeepSeek、StepFun、OpenRouter、xAI 等按金额计费的供应商，直接显示账户余额（点击刷新）。
+
+### 额度百分比
+
+<p align="center"><img src="docs/images/quota.png" alt="额度百分比" width="720"></p>
+
+Kimi Coding 同时显示「7 天周额度」与「5 小时速率额度」的剩余百分比（鼠标悬停可看剩余次数与重置时间）。
+
+### 登录查看
+
+<p align="center"><img src="docs/images/login-required.png" alt="登录查看" width="720"></p>
+
+千问（百炼 Token Plan）、小米 MiMo 等无 API 余额接口，点击在**新页面**打开对应控制台。
+
+### 暂不支持
+
+<p align="center"><img src="docs/images/unqueryable.png" alt="暂不支持" width="720"></p>
+
+既无 API 接口也无公开控制台入口的供应商。
 
 ## 工作原理
 
