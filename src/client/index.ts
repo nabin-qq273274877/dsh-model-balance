@@ -98,6 +98,10 @@ function quotaWindowLabel(t: (key: string) => string, window: string): string {
   return window
 }
 
+function quotaPercent(remaining: number, limit: number): number {
+  return limit > 0 ? Math.round((remaining / limit) * 100) : 0
+}
+
 // ---------------------------------------------------------------------------
 // DSH CSS injection
 // ---------------------------------------------------------------------------
@@ -292,19 +296,27 @@ function BalancePill(props: any) {
   if (value.kind === "quota") {
     const dims =
       value.dims !== undefined && value.dims.length > 1 ? value.dims : undefined
-    const tone =
-      value.remaining <= 0
+    const toneOf = (remaining: number, limit: number): string | undefined =>
+      remaining <= 0
         ? "error"
-        : value.limit > 0 && value.remaining <= value.limit * 0.1
+        : limit > 0 && remaining <= limit * 0.1
           ? "warn"
           : undefined
+    const tone =
+      dims !== undefined
+        ? dims.reduce<string | undefined>(
+            (acc, d) =>
+              acc === "error" ? acc : toneOf(d.remaining, d.limit) ?? acc,
+            undefined,
+          )
+        : toneOf(value.remaining, value.limit)
 
     const quotaText =
       dims !== undefined
         ? dims
             .map(
               (d) =>
-                `${quotaWindowLabel(t, d.window)} ${d.remaining}/${d.limit}`,
+                `${quotaWindowLabel(t, d.window)} ${quotaPercent(d.remaining, d.limit)}%`,
             )
             .join(" · ")
         : t("quota.value", { remaining: value.remaining, limit: value.limit })
@@ -316,12 +328,12 @@ function BalancePill(props: any) {
             dims: dims
               .map(
                 (d) =>
-                  `${quotaWindowLabel(t, d.window)} ${d.remaining}/${d.limit}` +
+                  `${quotaWindowLabel(t, d.window)} ${quotaPercent(d.remaining, d.limit)}% (${d.remaining}/${d.limit})` +
                   (d.resetTime !== undefined
-                    ? ` (${t("tooltip.quota.resets")} ${formatReset(d.resetTime)})`
+                    ? ` · ${t("tooltip.quota.resets")} ${formatReset(d.resetTime)}`
                     : ""),
               )
-              .join(" · "),
+              .join("\n"),
           })
         : t("tooltip.quota", {
             provider: groupName,
@@ -390,8 +402,8 @@ const zh: Record<string, string> = {
   "pill.error": "查询失败",
   "pill.unqueryable": "暂不支持",
   "quota.value": "{remaining}/{limit} 次",
-  "quota.window.weekly": "7天",
-  "quota.window.hourly": "5小时",
+  "quota.window.weekly": "7d",
+  "quota.window.hourly": "5h",
   "tooltip.loading": "正在查询 {provider} 余额…",
   "tooltip.currency": "{provider} 账户余额 ¥{balance}（点击刷新）",
   "tooltip.quota":
