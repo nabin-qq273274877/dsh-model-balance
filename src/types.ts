@@ -17,6 +17,17 @@ export interface CurrencyResult {
   readonly voucher?: number
 }
 
+/** A single quota window (e.g. Kimi's 5-hour rate limit or 7-day weekly). */
+export interface QuotaDim {
+  /** Semantic window key, localized by the client: "hourly" | "weekly". */
+  readonly window: string
+  readonly limit: number
+  readonly used: number
+  readonly remaining: number
+  /** ISO 8601 timestamp at which this window resets. */
+  readonly resetTime?: string
+}
+
 /** A balance query that returned a request-count quota. */
 export interface QuotaResult {
   readonly queryable: true
@@ -27,6 +38,8 @@ export interface QuotaResult {
   readonly remaining: number
   /** ISO 8601 timestamp at which the quota resets. */
   readonly resetTime?: string
+  /** Multiple windows (e.g. Kimi 5-hour rate + 7-day weekly). */
+  readonly dims?: readonly QuotaDim[]
 }
 
 /** The provider has no API-level balance endpoint. */

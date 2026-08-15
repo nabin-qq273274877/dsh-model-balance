@@ -13,7 +13,12 @@
  *  3. Append to `STRATEGIES`.
  */
 
-import type { BalanceQueryResult, CurrencyResult, QuotaResult } from "../types.js"
+import type {
+  BalanceQueryResult,
+  CurrencyResult,
+  QuotaDim,
+  QuotaResult,
+} from "../types.js"
 import { loadCustomProviders } from "./custom-providers.js"
 
 // ---------------------------------------------------------------------------
@@ -62,15 +67,48 @@ function parseStepFun(body: unknown): CurrencyResult {
 }
 
 function parseKimiCoding(body: unknown): QuotaResult {
-  const usage = (body as Record<string, unknown> | null)?.usage as
-    | Record<string, unknown>
-    | undefined
+  // Kimi Coding `/v1/usages` returns two windows:
+  //   - `usage`:  the 7-day weekly quota (membership tier)
+  //   - `limits`: a list of rate limits, the first being the 5-hour window
+  //               (window.duration=300, timeUnit=TIME_UNIT_MINUTE)
+  const root = (body as Record<string, unknown> | null) ?? {}
+  const usage = root.usage as Record<string, unknown> | undefined
   const limit = Number(usage?.limit)
   const used = Number(usage?.used)
   const remaining = Number(usage?.remaining)
   if (!Number.isFinite(limit) || !Number.isFinite(used) || !Number.isFinite(remaining)) {
     throw new Error("unexpected kimi usages response")
   }
+
+  const dims: QuotaDim[] = [
+    {
+      window: "weekly",
+      limit,
+      used,
+      remaining,
+      ...(typeof usage?.resetTime === "string" ? { resetTime: usage.resetTime } : {}),
+    },
+  ]
+
+  const limits = root.limits
+  if (Array.isArray(limits) && limits.length > 0) {
+    const detail = (limits[0] as Record<string, unknown> | undefined)?.detail as
+      | Record<string, unknown>
+      | undefined
+    const hLimit = Number(detail?.limit)
+    const hUsed = Number(detail?.used)
+    const hRemaining = Number(detail?.remaining)
+    if (Number.isFinite(hLimit) && Number.isFinite(hUsed) && Number.isFinite(hRemaining)) {
+      dims.push({
+        window: "hourly",
+        limit: hLimit,
+        used: hUsed,
+        remaining: hRemaining,
+        ...(typeof detail?.resetTime === "string" ? { resetTime: detail.resetTime } : {}),
+      })
+    }
+  }
+
   return {
     queryable: true,
     kind: "quota",
@@ -79,6 +117,7 @@ function parseKimiCoding(body: unknown): QuotaResult {
     used,
     remaining,
     ...(typeof usage?.resetTime === "string" ? { resetTime: usage.resetTime } : {}),
+    dims,
   }
 }
 

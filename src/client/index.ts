@@ -92,6 +92,12 @@ function formatReset(resetTime: string): string {
   })
 }
 
+function quotaWindowLabel(t: (key: string) => string, window: string): string {
+  if (window === "weekly") return t("quota.window.weekly")
+  if (window === "hourly") return t("quota.window.hourly")
+  return window
+}
+
 // ---------------------------------------------------------------------------
 // DSH CSS injection
 // ---------------------------------------------------------------------------
@@ -284,33 +290,63 @@ function BalancePill(props: any) {
 
   // --- Quota ---
   if (value.kind === "quota") {
+    const dims =
+      value.dims !== undefined && value.dims.length > 1 ? value.dims : undefined
     const tone =
       value.remaining <= 0
         ? "error"
         : value.limit > 0 && value.remaining <= value.limit * 0.1
           ? "warn"
           : undefined
-    const quotaText = t("quota.value", {
-      remaining: value.remaining,
-      limit: value.limit,
-    })
+
+    const quotaText =
+      dims !== undefined
+        ? dims
+            .map(
+              (d) =>
+                `${quotaWindowLabel(t, d.window)} ${d.remaining}/${d.limit}`,
+            )
+            .join(" · ")
+        : t("quota.value", { remaining: value.remaining, limit: value.limit })
+
+    const title =
+      dims !== undefined
+        ? t("tooltip.quota.dims", {
+            provider: groupName,
+            dims: dims
+              .map(
+                (d) =>
+                  `${quotaWindowLabel(t, d.window)} ${d.remaining}/${d.limit}` +
+                  (d.resetTime !== undefined
+                    ? ` (${t("tooltip.quota.resets")} ${formatReset(d.resetTime)})`
+                    : ""),
+              )
+              .join(" · "),
+          })
+        : t("tooltip.quota", {
+            provider: groupName,
+            remaining: value.remaining,
+            limit: value.limit,
+            reset: value.resetTime !== undefined ? formatReset(value.resetTime) : "?",
+          })
+
+    const ariaLabel =
+      dims !== undefined
+        ? t("aria.quota.dims", { provider: groupName, dims: quotaText })
+        : t("aria.quota", {
+            provider: groupName,
+            remaining: value.remaining,
+            limit: value.limit,
+          })
+
     return h(
       "button",
       {
         type: "button",
         className: CLS.root,
         ...(tone !== undefined ? { "data-tone": tone } : {}),
-        title: t("tooltip.quota", {
-          provider: groupName,
-          remaining: value.remaining,
-          limit: value.limit,
-          reset: value.resetTime !== undefined ? formatReset(value.resetTime) : "?",
-        }),
-        "aria-label": t("aria.quota", {
-          provider: groupName,
-          remaining: value.remaining,
-          limit: value.limit,
-        }),
+        title,
+        "aria-label": ariaLabel,
         onClick: () => runQuery(provider, true),
       },
       h("span", { className: CLS.icon }, h(GaugeIcon, {})),
@@ -354,14 +390,19 @@ const zh: Record<string, string> = {
   "pill.error": "查询失败",
   "pill.unqueryable": "暂不支持",
   "quota.value": "{remaining}/{limit} 次",
+  "quota.window.weekly": "7天",
+  "quota.window.hourly": "5小时",
   "tooltip.loading": "正在查询 {provider} 余额…",
   "tooltip.currency": "{provider} 账户余额 ¥{balance}（点击刷新）",
   "tooltip.quota":
     "{provider} 配额剩余 {remaining}/{limit} 次 · 重置：{reset}（点击刷新）",
+  "tooltip.quota.dims": "{provider} 配额：{dims}（点击刷新）",
+  "tooltip.quota.resets": "重置",
   "tooltip.unqueryable": "{provider} 暂不支持余额查询（点击重试）",
   "tooltip.error": "余额查询失败：{message}（点击重试）",
   "aria.currency": "{provider} 账户余额 {balance} 元",
   "aria.quota": "{provider} 配额剩余 {remaining} 次，共 {limit} 次",
+  "aria.quota.dims": "{provider} 配额：{dims}",
   "aria.unqueryable": "{provider} 暂不支持余额查询",
   "aria.error": "{provider} 余额查询失败：{message}",
 }
@@ -371,14 +412,19 @@ const en: Record<string, string> = {
   "pill.error": "Query failed",
   "pill.unqueryable": "Not supported",
   "quota.value": "{remaining}/{limit} req",
+  "quota.window.weekly": "7d",
+  "quota.window.hourly": "5h",
   "tooltip.loading": "Querying {provider} balance…",
   "tooltip.currency": "{provider} account balance ¥{balance} (click to refresh)",
   "tooltip.quota":
     "{provider} quota {remaining}/{limit} requests left · resets {reset} (click to refresh)",
+  "tooltip.quota.dims": "{provider} quota: {dims} (click to refresh)",
+  "tooltip.quota.resets": "resets",
   "tooltip.unqueryable": "{provider} balance query is not supported (click to retry)",
   "tooltip.error": "Balance query failed: {message} (click to retry)",
   "aria.currency": "{provider} account balance: {balance}",
   "aria.quota": "{provider} quota: {remaining} of {limit} requests left",
+  "aria.quota.dims": "{provider} quota: {dims}",
   "aria.unqueryable": "{provider} balance query is not supported",
   "aria.error": "{provider} balance query failed: {message}",
 }
