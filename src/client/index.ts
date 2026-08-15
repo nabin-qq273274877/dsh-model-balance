@@ -16,16 +16,26 @@ import * as React from "react"
 import { jsx } from "react/jsx-runtime"
 import type { BalanceQueryResult } from "../types.js"
 
+/**
+ * JSX helper: React 18's `jsx(type, props, key)` takes children via
+ * `props.children`, not as extra positional args.  This wrapper matches the
+ * common `createElement(type, props, ...children)` calling convention so the
+ * icon/pill trees below render their children correctly.
+ */
+function h(type: any, props: any, ...children: any[]) {
+  return jsx(type, { ...props, children })
+}
+
 // ---------------------------------------------------------------------------
 // Icons (react/jsx-runtime elements)
 // ---------------------------------------------------------------------------
 
 function CoinIcon() {
-  return jsx(
+  return h(
     "svg",
     { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
-    jsx("circle", { cx: 7, cy: 7, r: 6.1, fill: "none", stroke: "currentColor", strokeWidth: 1.2 }),
-    jsx("path", {
+    h("circle", { cx: 7, cy: 7, r: 6.1, fill: "none", stroke: "currentColor", strokeWidth: 1.2 }),
+    h("path", {
       d: "M4.7 4.1 7 6.9l2.3-2.8M7 6.9v3.4M5.3 8h3.4M5.3 9.7h3.4",
       fill: "none", stroke: "currentColor", strokeWidth: 1.1,
       strokeLinecap: "round", strokeLinejoin: "round",
@@ -34,14 +44,14 @@ function CoinIcon() {
 }
 
 function GaugeIcon() {
-  return jsx(
+  return h(
     "svg",
     { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
-    jsx("path", {
+    h("path", {
       d: "M2.2 10.2a4.8 4.8 0 1 1 9.6 0",
       fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round",
     }),
-    jsx("path", {
+    h("path", {
       d: "M7 10.2 9.4 7.2",
       fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round",
     }),
@@ -49,15 +59,15 @@ function GaugeIcon() {
 }
 
 function WarnIcon() {
-  return jsx(
+  return h(
     "svg",
     { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
-    jsx("path", {
+    h("path", {
       d: "M7 2 12.6 11.6H1.4L7 2Z",
       fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinejoin: "round",
     }),
-    jsx("path", { d: "M7 5.8v2.6", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round" }),
-    jsx("circle", { cx: 7, cy: 10, r: 0.7, fill: "currentColor" }),
+    h("path", { d: "M7 5.8v2.6", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round" }),
+    h("circle", { cx: 7, cy: 10, r: 0.7, fill: "currentColor" }),
   )
 }
 
@@ -224,21 +234,21 @@ function BalancePill(props: any) {
 
   // --- Idle / loading ---
   if (query.status === "idle" || query.status === "loading") {
-    return jsx(
+    return h(
       "div",
       {
         className: CLS.root,
         "data-tone": "dim",
         title: t("tooltip.loading", { provider: groupName }),
       },
-      jsx("span", { className: CLS.icon }, jsx(CoinIcon, {})),
-      jsx("span", {}, t("pill.querying")),
+      h("span", { className: CLS.icon }, h(CoinIcon, {})),
+      h("span", {}, t("pill.querying")),
     )
   }
 
   // --- Error ---
   if (query.status === "error") {
-    return jsx(
+    return h(
       "button",
       {
         type: "button",
@@ -248,8 +258,8 @@ function BalancePill(props: any) {
         "aria-label": t("aria.error", { provider: groupName, message: query.message }),
         onClick: () => runQuery(provider, true),
       },
-      jsx("span", { className: CLS.icon }, jsx(WarnIcon, {})),
-      jsx("span", {}, t("pill.error")),
+      h("span", { className: CLS.icon }, h(WarnIcon, {})),
+      h("span", {}, t("pill.error")),
     )
   }
 
@@ -257,7 +267,7 @@ function BalancePill(props: any) {
 
   // --- Unqueryable ---
   if (value.queryable === false) {
-    return jsx(
+    return h(
       "button",
       {
         type: "button",
@@ -267,8 +277,8 @@ function BalancePill(props: any) {
         "aria-label": t("aria.unqueryable", { provider: groupName }),
         onClick: () => runQuery(provider, true),
       },
-      jsx("span", { className: CLS.icon }, jsx(WarnIcon, {})),
-      jsx("span", {}, t("pill.unqueryable")),
+      h("span", { className: CLS.icon }, h(WarnIcon, {})),
+      h("span", {}, t("pill.unqueryable")),
     )
   }
 
@@ -284,7 +294,7 @@ function BalancePill(props: any) {
       remaining: value.remaining,
       limit: value.limit,
     })
-    return jsx(
+    return h(
       "button",
       {
         type: "button",
@@ -303,8 +313,8 @@ function BalancePill(props: any) {
         }),
         onClick: () => runQuery(provider, true),
       },
-      jsx("span", { className: CLS.icon }, jsx(GaugeIcon, {})),
-      jsx("span", {}, quotaText),
+      h("span", { className: CLS.icon }, h(GaugeIcon, {})),
+      h("span", {}, quotaText),
     )
   }
 
@@ -314,7 +324,7 @@ function BalancePill(props: any) {
   const tone =
     value.balance <= 0.005 ? "error" : value.balance < 20 ? "warn" : undefined
 
-  return jsx(
+  return h(
     "button",
     {
       type: "button",
@@ -330,8 +340,8 @@ function BalancePill(props: any) {
       }),
       onClick: () => runQuery(provider, true),
     },
-    jsx("span", { className: CLS.icon }, jsx(CoinIcon, {})),
-    jsx("span", {}, balanceText),
+    h("span", { className: CLS.icon }, h(CoinIcon, {})),
+    h("span", {}, balanceText),
   )
 }
 
