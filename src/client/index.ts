@@ -394,6 +394,8 @@ export function apply(ctx: any): void {
       scope.slots.register(
         {
           name: "conversation.input.right",
+          id: "model-balance",
+          order: 100,
           locale: NS,
           inject: (sessionId: string) => {
             const directory = models.directoryFor(sessionId)
