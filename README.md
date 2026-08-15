@@ -15,17 +15,37 @@
 |--------|---------|---------|------|
 | **DeepSeek** | `GET /user/balance` | 账户余额（¥） | ✅ 官方接口 |
 | **StepFun** | `GET /v1/accounts` | 账户余额（¥） | ✅ 官方接口 |
-| **Kimi Coding** | `GET /v1/usages` | 每周请求配额 | ✅ 官方接口 |
+| **Kimi Coding** | `GET /v1/usages` | 配额（7 天 + 5 小时） | ✅ 官方接口 |
 | **OpenRouter** | `GET /api/v1/auth/key` | Credit 余额 ($) | ✅ 官方接口 |
 | **MiniMax** | `GET /v1/token_plan/remains` | 剩余额度 | ✅ 官方接口 |
 | **xAI / Grok** | `GET /v1/dashboard/billing/credit_grants` | Credit 余额 ($) | ✅ 官方接口 |
-| 通义 Token Plan | — | 仅控制台 | ⚠️ 暂不支持 |
-| 小米 MiMo | — | 仅控制台 | ⚠️ 暂不支持 |
-| Mistral、Groq、Cohere 等 | — | 仅控制台 | ⚠️ 暂不支持 |
+| **通义 Token Plan** | 百炼控制台 | 登录查看 | 🔗 需登录 |
+| **小米 MiMo** | 小米平台控制台 | 登录查看 | 🔗 需登录 |
+| Mistral、Groq、Cohere 等 | — | — | ⚠️ 暂不支持 |
 
 > **添加新供应商？** 有两种方式：
 > 1. **配置文件**（推荐）：编辑插件目录的 `providers.json` 或创建 `~/.dsh/model-balance-providers.json`
 > 2. **提交 PR**：参见 [`src/host/strategies.ts`](src/host/strategies.ts) — 添加解析器 + 策略条目
+
+## 显示状态
+
+胶囊根据供应商类型显示四种状态：
+
+<table>
+  <tr align="center">
+    <td width="50%"><img src="docs/images/currency.png" alt="金额余额" width="380"><br><b>金额余额</b></td>
+    <td width="50%"><img src="docs/images/quota.png" alt="额度百分比" width="380"><br><b>额度百分比</b></td>
+  </tr>
+  <tr align="center">
+    <td><img src="docs/images/login-required.png" alt="登录查看" width="380"><br><b>登录查看</b></td>
+    <td><img src="docs/images/unqueryable.png" alt="暂不支持" width="380"><br><b>暂不支持</b></td>
+  </tr>
+</table>
+
+- **金额余额**：DeepSeek、StepFun、OpenRouter、xAI 等按金额计费的供应商，直接显示账户余额（点击刷新）。
+- **额度百分比**：Kimi Coding 同时显示「7 天周额度」与「5 小时速率额度」的剩余百分比（鼠标悬停可看剩余次数与重置时间）。
+- **登录查看**：千问（百炼 Token Plan）、小米 MiMo 等无 API 余额接口，点击在**新页面**打开对应控制台。
+- **暂不支持**：既无 API 接口也无公开控制台入口的供应商。
 
 ## 工作原理
 
@@ -148,6 +168,9 @@ src/
 
 scripts/
 └── build.ts              # esbuild：宿主 ESM + 客户端工厂打包
+
+docs/
+└── images/               # README 截图
 
 test/
 └── strategies.test.ts    # 策略匹配 + 解析器单元测试

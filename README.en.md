@@ -15,17 +15,37 @@ Shows a balance pill **in front of the model selector** in the composer. Switch 
 |----------|-------------|------|--------|
 | **DeepSeek** | `GET /user/balance` | Account balance (¥) | ✅ Official API |
 | **StepFun** | `GET /v1/accounts` | Account balance (¥) | ✅ Official API |
-| **Kimi Coding** | `GET /v1/usages` | Weekly request quota | ✅ Official API |
+| **Kimi Coding** | `GET /v1/usages` | Quota (7-day + 5-hour) | ✅ Official API |
 | **OpenRouter** | `GET /api/v1/auth/key` | Credit balance ($) | ✅ Official API |
 | **MiniMax** | `GET /v1/token_plan/remains` | Remaining quota | ✅ Official API |
 | **xAI / Grok** | `GET /v1/dashboard/billing/credit_grants` | Credit balance ($) | ✅ Official API |
-| Qwen Token Plan | — | Console only | ⚠️ Not supported |
-| Xiaomi MiMo | — | Console only | ⚠️ Not supported |
-| Mistral, Groq, Cohere, … | — | Console only | ⚠️ Not supported |
+| **Qwen Token Plan** | Bailian console | Login to view | 🔗 Login required |
+| **Xiaomi MiMo** | Xiaomi platform console | Login to view | 🔗 Login required |
+| Mistral, Groq, Cohere, … | — | — | ⚠️ Not supported |
 
 > **Adding a new provider?** Two ways:
 > 1. **Config file** (recommended): Edit `providers.json` in plugin directory or create `~/.dsh/model-balance-providers.json`
 > 2. **Submit PR**: See [`src/host/strategies.ts`](src/host/strategies.ts) — add a parser + strategy entry
+
+## Display States
+
+The pill renders four states depending on the provider type:
+
+<table>
+  <tr align="center">
+    <td width="50%"><img src="docs/images/currency.png" alt="Currency balance" width="380"><br><b>Currency balance</b></td>
+    <td width="50%"><img src="docs/images/quota.png" alt="Quota percentage" width="380"><br><b>Quota percentage</b></td>
+  </tr>
+  <tr align="center">
+    <td><img src="docs/images/login-required.png" alt="Login to view" width="380"><br><b>Login to view</b></td>
+    <td><img src="docs/images/unqueryable.png" alt="Not supported" width="380"><br><b>Not supported</b></td>
+  </tr>
+</table>
+
+- **Currency balance**: DeepSeek, StepFun, OpenRouter, xAI, etc. show the account balance directly (click to refresh).
+- **Quota percentage**: Kimi Coding shows both the 7-day weekly quota and the 5-hour rate-limit as remaining percentages (hover for request counts and reset time).
+- **Login to view**: Qwen (Bailian Token Plan) and Xiaomi MiMo have no API balance endpoint — clicking opens the console in a **new page**.
+- **Not supported**: providers with neither an API endpoint nor a public console entry.
 
 ## How It Works
 
@@ -148,6 +168,9 @@ src/
 
 scripts/
 └── build.ts              # esbuild: host ESM + client factory bundle
+
+docs/
+└── images/               # README screenshots
 
 test/
 └── strategies.test.ts    # Unit tests for matching + parsing
