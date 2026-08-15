@@ -13,7 +13,7 @@
  */
 
 import type { BalanceQueryResult, BalanceResponse } from "../types.js"
-import { matchStrategy } from "./strategies.js"
+import { matchStrategy, matchLoginRequired } from "./strategies.js"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -135,6 +135,15 @@ export function apply(ctx: any): () => void {
 
     const strategy = matchStrategy(providerId, configuredBaseURL, configuredKeyEnv)
     if (strategy === undefined) {
+      const loginUrl = matchLoginRequired(providerId, configuredBaseURL)
+      if (loginUrl !== undefined) {
+        return {
+          queryable: false as const,
+          reason: "login-required" as const,
+          provider: providerId,
+          loginUrl,
+        }
+      }
       return { queryable: false as const, reason: "no-balance-api" as const, provider: providerId }
     }
 

@@ -245,9 +245,30 @@ const URL_MATCHERS: Array<[RegExp, string]> = [
   [/api\.minimax\.chat/i, "minimax"],
   [/api\.x\.ai/i, "xai"],
   [/platform\.stepfun\.com/i, "stepfun"],
-  [/coding\.dashscope/i, "qwen-coding-plan"],
-  [/maas\.aliyuncs\.com/i, "qwen-token-plan"],
-  [/xiaomimimo\.com/i, "xiaomi"],
+]
+
+/**
+ * Providers whose balance can only be viewed through a web login (no API-key
+ * billing endpoint).  The pill renders "click to log in and view" and opens
+ * the console URL in a new page.
+ */
+const LOGIN_REQUIRED_BY_ID: Record<string, string> = {
+  "qwen-token-plan-cn":
+    "https://bailian.console.aliyun.com/cn-beijing?tab=plan#/efm/subscription/token-plan/personal",
+  "qwen-token-plan":
+    "https://bailian.console.aliyun.com/cn-beijing?tab=plan#/efm/subscription/token-plan/personal",
+  "qwen-coding-plan":
+    "https://bailian.console.aliyun.com/cn-beijing?tab=plan#/efm/subscription/token-plan/personal",
+  xiaomi: "https://platform.xiaomimimo.com/console/balance",
+}
+
+// baseURL family → console URL for login-required providers
+const LOGIN_REQUIRED_URLS: Array<[RegExp, string]> = [
+  [
+    /bailian\.console\.aliyun\.com|dashscope|aliyuncs\.com/i,
+    "https://bailian.console.aliyun.com/cn-beijing?tab=plan#/efm/subscription/token-plan/personal",
+  ],
+  [/xiaomimimo\.com/i, "https://platform.xiaomimimo.com/console/balance"],
 ]
 
 export interface ResolvedStrategy {
@@ -328,6 +349,29 @@ export function matchStrategy(
           }
         }
       }
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Resolve a provider to its web-login console URL, if it has no API balance
+ * endpoint but can be viewed via login.
+ *
+ * @returns the console URL, or `undefined` when the provider is not
+ *          login-required (it either has an API strategy or is unknown).
+ */
+export function matchLoginRequired(
+  providerId: string,
+  configuredBaseURL?: string,
+): string | undefined {
+  const byId = LOGIN_REQUIRED_BY_ID[providerId.toLowerCase()]
+  if (byId !== undefined) return byId
+
+  if (configuredBaseURL !== undefined) {
+    for (const [pattern, url] of LOGIN_REQUIRED_URLS) {
+      if (pattern.test(configuredBaseURL)) return url
     }
   }
 

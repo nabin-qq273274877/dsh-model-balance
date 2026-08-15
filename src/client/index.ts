@@ -71,6 +71,17 @@ function WarnIcon() {
   )
 }
 
+function ExternalIcon() {
+  return h(
+    "svg",
+    { viewBox: "0 0 14 14", width: 12, height: 12, "aria-hidden": true },
+    h("path", {
+      d: "M8.5 2.5h3v3M11.5 2.5 6.5 7.5M7 3.5H4a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V7",
+      fill: "none", stroke: "currentColor", strokeWidth: 1.2, strokeLinecap: "round", strokeLinejoin: "round",
+    }),
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Formatting helpers
 // ---------------------------------------------------------------------------
@@ -277,6 +288,24 @@ function BalancePill(props: any) {
 
   // --- Unqueryable ---
   if (value.queryable === false) {
+    if (value.reason === "login-required" && value.loginUrl !== undefined) {
+      const url = value.loginUrl
+      return h(
+        "button",
+        {
+          type: "button",
+          className: CLS.root,
+          "data-tone": "dim",
+          title: t("tooltip.login", { provider: groupName, url }),
+          "aria-label": t("aria.login", { provider: groupName }),
+          onClick: () => {
+            window.open(url, "_blank", "noopener,noreferrer")
+          },
+        },
+        h("span", { className: CLS.icon }, h(ExternalIcon, {})),
+        h("span", {}, t("pill.login")),
+      )
+    }
     return h(
       "button",
       {
@@ -401,6 +430,7 @@ const zh: Record<string, string> = {
   "pill.querying": "查询中…",
   "pill.error": "查询失败",
   "pill.unqueryable": "暂不支持",
+  "pill.login": "点击登录查看",
   "quota.value": "{remaining}/{limit} 次",
   "quota.window.weekly": "7d",
   "quota.window.hourly": "5h",
@@ -411,11 +441,13 @@ const zh: Record<string, string> = {
   "tooltip.quota.dims": "{provider} 配额：{dims}（点击刷新）",
   "tooltip.quota.resets": "重置",
   "tooltip.unqueryable": "{provider} 暂不支持余额查询（点击重试）",
+  "tooltip.login": "{provider} 余额需登录网页查看（点击打开）",
   "tooltip.error": "余额查询失败：{message}（点击重试）",
   "aria.currency": "{provider} 账户余额 {balance} 元",
   "aria.quota": "{provider} 配额剩余 {remaining} 次，共 {limit} 次",
   "aria.quota.dims": "{provider} 配额：{dims}",
   "aria.unqueryable": "{provider} 暂不支持余额查询",
+  "aria.login": "{provider} 余额需登录查看",
   "aria.error": "{provider} 余额查询失败：{message}",
 }
 
@@ -423,6 +455,7 @@ const en: Record<string, string> = {
   "pill.querying": "Checking…",
   "pill.error": "Query failed",
   "pill.unqueryable": "Not supported",
+  "pill.login": "Log in to view",
   "quota.value": "{remaining}/{limit} req",
   "quota.window.weekly": "7d",
   "quota.window.hourly": "5h",
@@ -433,11 +466,13 @@ const en: Record<string, string> = {
   "tooltip.quota.dims": "{provider} quota: {dims} (click to refresh)",
   "tooltip.quota.resets": "resets",
   "tooltip.unqueryable": "{provider} balance query is not supported (click to retry)",
+  "tooltip.login": "{provider} balance requires login (click to open)",
   "tooltip.error": "Balance query failed: {message} (click to retry)",
   "aria.currency": "{provider} account balance: {balance}",
   "aria.quota": "{provider} quota: {remaining} of {limit} requests left",
   "aria.quota.dims": "{provider} quota: {dims}",
   "aria.unqueryable": "{provider} balance query is not supported",
+  "aria.login": "{provider} balance requires login",
   "aria.error": "{provider} balance query failed: {message}",
 }
 

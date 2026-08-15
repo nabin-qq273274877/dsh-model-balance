@@ -45,8 +45,10 @@ export interface QuotaResult {
 /** The provider has no API-level balance endpoint. */
 export interface UnqueryableResult {
   readonly queryable: false
-  readonly reason: "no-balance-api"
+  readonly reason: "no-balance-api" | "login-required"
   readonly provider: string
+  /** Web console URL to open when the balance must be viewed via login. */
+  readonly loginUrl?: string
 }
 
 /** Every possible host-route answer for one provider. */
