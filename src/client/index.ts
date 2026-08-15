@@ -130,7 +130,7 @@ interface QueryState {
  *  - `t`: locale translator (slot locale)
  */
 function BalancePill(props: any) {
-  const { directory, session, t } = props
+  const { directory, session, t, load } = props
   const { useSyncExternalStore, useState, useRef, useEffect, useCallback } = React
 
   const state = useSyncExternalStore(
@@ -140,6 +140,11 @@ function BalancePill(props: any) {
   const running = session?.running ?? false
   const current = state.current
   const provider: string | null = current === null ? null : current.provider
+
+  // Load the directory on mount so `current` is populated (host does not push it)
+  useEffect(() => {
+    load?.()
+  }, [load])
   const groupName =
     provider === null
       ? ""
@@ -390,9 +395,15 @@ export function apply(ctx: any): void {
         {
           name: "conversation.input.right",
           locale: NS,
-          inject: (sessionId: string) => ({
-            directory: models.directoryFor(sessionId).store,
-          }),
+          inject: (sessionId: string) => {
+            const directory = models.directoryFor(sessionId)
+            return {
+              directory: directory.store,
+              load: () => {
+                directory.load().catch(() => {})
+              },
+            }
+          },
         },
         BalancePill,
       ),
