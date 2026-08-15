@@ -1,0 +1,95 @@
+{
+  "_comment": "内置供应商配置。支持三种取值方式：简单路径、数组查找、表达式计算。",
+  "providers": {
+    "deepseek": {
+      "name": "DeepSeek",
+      "baseURL": "https://api.deepseek.com",
+      "endpoint": "/user/balance",
+      "keyEnv": "DEEPSEEK_API_KEY",
+      "response": {
+        "type": "currency",
+        "currency": "CNY",
+        "balance": {
+          "path": "balance_infos",
+          "find": { "field": "currency", "equals": "CNY" },
+          "value": "total_balance"
+        },
+        "available": "is_available"
+      },
+      "aliases": ["deepseek-official"]
+    },
+    "stepfun": {
+      "name": "StepFun",
+      "baseURL": "https://api.stepfun.com/v1",
+      "endpoint": "/accounts",
+      "keyEnv": "STEPFUN_API_KEY",
+      "response": {
+        "type": "currency",
+        "currency": "CNY",
+        "balance": "balance"
+      }
+    },
+    "kimi-coding": {
+      "name": "Kimi Coding",
+      "baseURL": "https://api.kimi.com/coding",
+      "endpoint": "/v1/usages",
+      "keyEnv": "KIMI_API_KEY",
+      "response": {
+        "type": "quota",
+        "limit": "usage.limit",
+        "used": "usage.used",
+        "remaining": "usage.remaining",
+        "resetTime": "usage.resetTime"
+      }
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "baseURL": "https://openrouter.ai",
+      "endpoint": "/api/v1/auth/key",
+      "keyEnv": "OPENROUTER_API_KEY",
+      "response": {
+        "type": "currency",
+        "currency": "USD",
+        "balance": {
+          "expr": "(data.limit - data.usage) / 100"
+        }
+      }
+    },
+    "minimax": {
+      "name": "MiniMax",
+      "baseURL": "https://api.minimax.chat",
+      "endpoint": "/v1/token_plan/remains",
+      "keyEnv": "MINIMAX_API_KEY",
+      "response": {
+        "type": "quota",
+        "limit": "total",
+        "used": "used",
+        "remaining": "data"
+      }
+    },
+    "xai": {
+      "name": "xAI / Grok",
+      "baseURL": "https://api.x.ai",
+      "endpoint": "/v1/dashboard/billing/credit_grants",
+      "keyEnv": "XAI_API_KEY",
+      "response": {
+        "type": "currency",
+        "currency": "USD",
+        "balance": "total_granted"
+      },
+      "aliases": ["grok"]
+    },
+    "_example_custom": {
+      "name": "示例：自定义供应商",
+      "baseURL": "https://api.example.com",
+      "endpoint": "/v1/usage",
+      "keyEnv": "EXAMPLE_API_KEY",
+      "response": {
+        "type": "quota",
+        "limit": "data.limit",
+        "used": "data.used",
+        "remaining": "data.remaining"
+      }
+    }
+  }
+}

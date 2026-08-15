@@ -76,12 +76,12 @@ async function main() {
   rmSync(OUT, { recursive: true, force: true })
   mkdirSync(OUT, { recursive: true })
 
-  // 1) Host entry — standard ESM
+  // 1) Host entry — standard ESM, bundled
   console.log("Building host entry …")
   await build({
     entryPoints: [resolve(ROOT, "src/host/index.ts")],
     outfile: resolve(OUT, "index.js"),
-    bundle: false,
+    bundle: true,
     platform: "node",
     target: "es2022",
     format: "esm",
