@@ -2,13 +2,35 @@ name: CI
 
 on:
   push:
-    branches: [main]
     tags: ["v*"]
-  pull_request:
-    branches: [main]
 
 jobs:
+  # 守卫：仅当 v* tag 指向 master 分支时，后续 job 才真正执行。
+  # 在 feature 分支误打 tag 会被此守卫拦截，build-and-test / publish 保持 skipped，
+  # 不会触发「Some jobs were not successful」的失败通知。
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      onMain: ${{ steps.check.outputs.onMain }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 拉取完整历史，确保 origin/master 可用
+
+      - name: Check tag points at master
+        id: check
+        run: |
+          if git merge-base --is-ancestor "$GITHUB_SHA" "origin/master"; then
+            echo "onMain=true" >> "$GITHUB_OUTPUT"
+            echo "tag $GITHUB_REF_NAME is on master"
+          else
+            echo "onMain=false" >> "$GITHUB_OUTPUT"
+            echo "tag $GITHUB_REF_NAME is NOT on master; skipping CI"
+          fi
+
   build-and-test:
+    needs: guard
+    if: needs.guard.outputs.onMain == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +53,7 @@ jobs:
 
   publish:
     needs: build-and-test
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: needs.guard.outputs.onMain == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
