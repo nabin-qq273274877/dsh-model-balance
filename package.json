@@ -1,6 +1,6 @@
 {
   "name": "dsh-model-balance",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Multi-provider account balance display for the DeepSeek Harness Web GUI. Queries real billing APIs (DeepSeek, StepFun, Kimi Coding, OpenRouter, MiniMax, xAI) and shows balance/quota in front of the model selector. Providers without an API-level billing endpoint show a clear 'Balance unavailable' state.",
   "type": "module",
   "main": "lib/index.js",
