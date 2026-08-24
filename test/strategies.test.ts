@@ -96,6 +96,21 @@ describe("matchStrategy", () => {
     expect(s).toBeDefined()
     expect(s!.canonical).toBe("openrouter")
   })
+
+  it("strips adapter prefix (vision-toolkit-deepseek-official)", () => {
+    const s = matchStrategy("vision-toolkit-deepseek-official")
+    expect(s).toBeDefined()
+    expect(s!.canonical).toBe("deepseek")
+    // Balance must go to the ORIGINAL provider endpoint, not the wrapper's
+    expect(s!.url).toBe("https://api.deepseek.com/user/balance")
+    expect(s!.keyEnv).toBe("DEEPSEEK_API_KEY")
+  })
+
+  it("strips adapter prefix for login-required providers", () => {
+    const s = matchStrategy("vision-toolkit-stepfun")
+    expect(s).toBeDefined()
+    expect(s!.canonical).toBe("stepfun")
+  })
 })
 
 // ---------------------------------------------------------------------------

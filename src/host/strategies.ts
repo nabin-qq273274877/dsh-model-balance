@@ -248,6 +248,17 @@ const URL_MATCHERS: Array<[RegExp, string]> = [
 ]
 
 /**
+ * Provider-route prefixes introduced by adapter plugins that wrap an existing
+ * provider.  e.g. dsh-vision-toolkit exposes `vision-toolkit-deepseek-official`
+ * over the underlying `deepseek-official` route.  The wrapped route still bills
+ * the UNDERLYING provider, so its balance must be read from the original
+ * provider's endpoint — the wrapper's own baseURL/keyEnv are irrelevant here.
+ */
+const ADAPTER_PREFIXES: readonly string[] = [
+  "vision-toolkit-",
+]
+
+/**
  * Providers whose balance can only be viewed through a web login (no API-key
  * billing endpoint).  The pill renders "click to log in and view" and opens
  * the console URL in a new page.
@@ -304,6 +315,30 @@ function buildKnownIds(): Map<string, string> {
 }
 
 /**
+ * Resolve a provider ID that is already known (canonical or alias) into a
+ * concrete strategy.  `configuredBaseURL`/`configuredKeyEnv` are overrides
+ * from settings; pass `undefined` to use the strategy's own defaults.
+ */
+function resolveKnown(
+  allStrategies: Record<string, Strategy>,
+  allKnownIds: Map<string, string>,
+  providerId: string,
+  configuredBaseURL?: string,
+  configuredKeyEnv?: string,
+): ResolvedStrategy | undefined {
+  const canonical = allKnownIds.get(providerId.toLowerCase())
+  if (canonical === undefined) return undefined
+  const s = allStrategies[canonical]
+  if (s === undefined) return undefined
+  return {
+    url: `${stripSlash(configuredBaseURL ?? s.defaultBaseURL)}${s.suffix}`,
+    keyEnv: configuredKeyEnv ?? s.defaultKeyEnv,
+    canonical,
+    parse: s.parse,
+  }
+}
+
+/**
  * Resolve a provider to its balance query strategy.
  *
  * @param providerId - The provider group ID from the model directory.
@@ -320,21 +355,30 @@ export function matchStrategy(
   const allKnownIds = buildKnownIds()
 
   // 1) Exact ID match
-  const canonical = allKnownIds.get(providerId.toLowerCase())
-  if (canonical !== undefined) {
-    const s = allStrategies[canonical]
-    if (s) {
-      const base = stripSlash(configuredBaseURL ?? s.defaultBaseURL)
-      return {
-        url: `${base}${s.suffix}`,
-        keyEnv: configuredKeyEnv ?? s.defaultKeyEnv,
-        canonical,
-        parse: s.parse,
-      }
-    }
+  const exact = resolveKnown(
+    allStrategies,
+    allKnownIds,
+    providerId,
+    configuredBaseURL,
+    configuredKeyEnv,
+  )
+  if (exact !== undefined) return exact
+
+  // 2) Adapter-prefixed ID (e.g. dsh-vision-toolkit wraps providers as
+  //    "vision-toolkit-deepseek-official"). Strip the prefix and rematch the
+  //    underlying provider. The balance endpoint lives on the ORIGINAL
+  //    provider's domain, so ignore the wrapper's baseURL/keyEnv and use the
+  //    strategy defaults.
+  const lower = providerId.toLowerCase()
+  for (const prefix of ADAPTER_PREFIXES) {
+    if (!lower.startsWith(prefix)) continue
+    const stripped = providerId.slice(prefix.length)
+    const wrapped = resolveKnown(allStrategies, allKnownIds, stripped)
+    if (wrapped !== undefined) return wrapped
+    break
   }
 
-  // 2) URL family match (for custom aliases that point to a known endpoint)
+  // 3) URL family match (for custom aliases that point to a known endpoint)
   const baseURL = configuredBaseURL
   if (baseURL !== undefined) {
     for (const [pattern, key] of URL_MATCHERS) {
@@ -368,6 +412,18 @@ export function matchLoginRequired(
 ): string | undefined {
   const byId = LOGIN_REQUIRED_BY_ID[providerId.toLowerCase()]
   if (byId !== undefined) return byId
+
+  // Adapter-prefixed wrapper (e.g. vision-toolkit-qwen-token-plan-cn) still
+  // points at the same web console as the underlying provider.
+  const lower = providerId.toLowerCase()
+  for (const prefix of ADAPTER_PREFIXES) {
+    if (lower.startsWith(prefix)) {
+      const stripped = providerId.slice(prefix.length)
+      const wrapped = LOGIN_REQUIRED_BY_ID[stripped.toLowerCase()]
+      if (wrapped !== undefined) return wrapped
+      break
+    }
+  }
 
   if (configuredBaseURL !== undefined) {
     for (const [pattern, url] of LOGIN_REQUIRED_URLS) {
