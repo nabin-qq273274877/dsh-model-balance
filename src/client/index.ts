@@ -524,7 +524,19 @@ const en: Record<string, string> = {
 
 const NS = "model-balance"
 
-export const inject = ["slots", "locale", "modelDirectories"] as const
+// `directoryFor` lives on the `modelDirectories` service whose methods rebind
+// `this.ctx` to the caller context (cordis traceable services). Resolving that
+// context requires the same backing services the resolver itself declares, so
+// declare them here too — otherwise `ctx.remote.session` fails with
+// "cannot get property remote.session without inject" when the slot inject runs.
+export const inject = [
+  "slots",
+  "locale",
+  "modelDirectories",
+  "sessions",
+  "remote",
+  "remote.session",
+] as const
 
 export function apply(ctx: any): void {
   ctx.effect(
