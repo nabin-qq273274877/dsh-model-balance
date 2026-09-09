@@ -7,7 +7,8 @@
  *
  * Refresh triggers:
  *  - mount and every provider switch
- *  - session `running` transitions true → false (turn ended, usage changed)
+ *  - session `running` transitions true → false (turn ended, usage changed);
+ *    read through the slot's standard `useSession` / `useConversation` hooks
  *  - periodic poll (every 2 minutes)
  *  - click (bypasses host cache)
  */
@@ -143,6 +144,8 @@ const CLS = {
 
 const QUERY_PATH = "/model-balance/query"
 const POLL_MS = 120_000
+/** Delay between a finished turn and the forced refresh (ms). */
+const TURN_END_SETTLE_MS = 1_200
 
 interface QueryState {
   status: "idle" | "loading" | "ready" | "error"
@@ -152,24 +155,53 @@ interface QueryState {
 }
 
 /**
+ * Fallback selector hook for DSH builds whose slot scope provides neither
+ * `useSession` nor `useConversation`.  It calls no hook of its own, so using it
+ * keeps this component's hook order stable.
+ */
+function useNoSessionState(): undefined {
+  return undefined
+}
+
+/** Selector for the authoritative "a turn is in flight" bit. */
+function selectRunning(snapshot: any): boolean {
+  return snapshot?.running === true
+}
+
+/**
  * Render a `<button>` that displays the real balance of the current model's
  * provider account, or "暂不支持" / "查询失败" when appropriate.
  *
  * Props come from the slot system:
  *  - `directory`: SnapshotStore<ModelDirectoryState> (from inject)
- *  - `session`: ConversationSnapshot (owner share — has `running`)
  *  - `t`: locale translator (slot locale)
+ *  - `useSession` / `useConversation`: standard session-scope selector hooks
+ *    (both snapshots expose the authoritative `running` bit)
+ *  - `session`: legacy owner share kept as a fallback for older builds
  */
 function BalancePill(props: any) {
-  const { directory, session, t, load } = props
+  const { directory, t, load } = props
   const { useSyncExternalStore, useState, useRef, useEffect, useCallback } = React
 
-  const state = useSyncExternalStore(
-    (fn: () => void) => directory.subscribe(fn),
-    () => directory.getSnapshot(),
+  const subscribe = useCallback(
+    (fn: () => void) => directory?.subscribe(fn) ?? (() => {}),
+    [directory],
   )
-  const running = session?.running ?? false
-  const current = state.current
+  const getSnapshot = useCallback(() => directory?.getSnapshot(), [directory])
+  const state = useSyncExternalStore(subscribe, getSnapshot)
+
+  // The slot renderer injects standard props, not a `session` object: hook
+  // sources named `session` / `conversation` arrive as `useSession` /
+  // `useConversation`.  Older builds exposed `session` directly, so fall back
+  // to it when neither hook is present.
+  const useSessionState =
+    props.useSession ?? props.useConversation ?? useNoSessionState
+  const observedRunning = useSessionState(selectRunning)
+  const running =
+    typeof observedRunning === "boolean"
+      ? observedRunning
+      : props.session?.running === true
+  const current = state?.current ?? null
   const provider: string | null = current === null ? null : current.provider
 
   // Load the directory on mount so `current` is populated (host does not push it)
@@ -236,13 +268,23 @@ function BalancePill(props: any) {
     runQuery(provider, false)
   }, [provider, runQuery])
 
-  // On turn end (running true→false) → force refresh
+  // On turn end (running true→false) → force refresh once the provider's
+  // billing endpoint has had a moment to account for the finished turn.
   const prevRunningRef = useRef(running)
+  const providerRef = useRef(provider)
+  useEffect(() => {
+    providerRef.current = provider
+  }, [provider])
   useEffect(() => {
     const was = prevRunningRef.current
     prevRunningRef.current = running
-    if (was && !running && provider !== null) runQuery(provider, true)
-  }, [running, provider, runQuery])
+    if (!was || running) return
+    const timer = setTimeout(() => {
+      const prov = providerRef.current
+      if (prov !== null) runQuery(prov, true)
+    }, TURN_END_SETTLE_MS)
+    return () => clearTimeout(timer)
+  }, [running, runQuery])
 
   // Periodic poll
   useEffect(() => {

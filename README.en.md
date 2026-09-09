@@ -146,7 +146,7 @@ Restart `dsh web` after modifying the config.
 | Trigger | Bypass Cache | Description |
 |---------|-------------|-------------|
 | Model switch | No | Query new provider's balance (host cache OK) |
-| Turn end | **Yes** | Usage just changed, force fresh data |
+| Turn end | **Yes** | ~1.2 s after a turn ends, force fresh data (lets the provider post the charge) |
 | Periodic poll | No | Every 2 minutes while tab is visible |
 | Click pill | **Yes** | Manual force-refresh |
 
