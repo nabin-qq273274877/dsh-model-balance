@@ -14,6 +14,7 @@ Shows a balance pill **in front of the model selector** in the composer. Switch 
 | Provider | API Endpoint | Data | Status |
 |----------|-------------|------|--------|
 | **DeepSeek** | `GET /user/balance` | Account balance (¥) | ✅ Official API |
+| **DeepSeek Account** (official sign-in) | Host account service `get_user_summary` | Recharge + granted balance (¥) | ✅ Official sign-in |
 | **StepFun** | `GET /v1/accounts` | Account balance (¥) | ✅ Official API |
 | **Kimi Coding** | `GET /v1/usages` | Quota (7-day + 5-hour) | ✅ Official API |
 | **OpenRouter** | `GET /api/v1/auth/key` | Credit balance ($) | ✅ Official API |
@@ -66,7 +67,8 @@ Providers with neither an API endpoint nor a public console entry.
 
 - **Browser**: renders the pill, triggers queries on model switch / turn end / periodic poll / click
 - **Host route** (`/model-balance/query`): resolves the provider's credential from DSH Credentials, queries the billing API, caches results (60s success / 15s error)
-- **No credentials leak**: API keys never reach the browser
+- **Official sign-in accounts**: routes such as `deepseek-account` carry no API key (they authenticate with a sign-in grant), so the Host reads the DeepSeek Platform wallet (recharge + granted balance) through the DSH account service instead; the pill asks for a sign-in when no grant is stored
+- **No credentials leak**: neither API keys nor sign-in grants reach the browser
 
 ## Install
 

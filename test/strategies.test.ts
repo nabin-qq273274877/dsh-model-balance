@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { matchStrategy, STRATEGIES } from "../src/host/strategies.js"
+import { matchStrategy, matchAccountProvider, STRATEGIES } from "../src/host/strategies.js"
 import type { CurrencyResult, QuotaResult } from "../src/types.js"
 
 describe("STRATEGIES", () => {
@@ -110,6 +110,33 @@ describe("matchStrategy", () => {
     const s = matchStrategy("vision-toolkit-stepfun")
     expect(s).toBeDefined()
     expect(s!.canonical).toBe("stepfun")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Account (sign-in grant) providers
+// ---------------------------------------------------------------------------
+
+describe("matchAccountProvider", () => {
+  it("recognises deepseek-account", () => {
+    expect(matchAccountProvider("deepseek-account")).toBe("deepseek-account")
+    expect(matchAccountProvider("DeepSeek-Account")).toBe("deepseek-account")
+  })
+
+  it("recognises the adapter-wrapped route", () => {
+    expect(matchAccountProvider("vision-toolkit-deepseek-account")).toBe("deepseek-account")
+  })
+
+  it("does not claim API-key or unknown providers", () => {
+    expect(matchAccountProvider("deepseek-official")).toBeUndefined()
+    expect(matchAccountProvider("deepseek")).toBeUndefined()
+    expect(matchAccountProvider("totally-unknown")).toBeUndefined()
+  })
+
+  it("keeps account routes out of the API-key strategy table", () => {
+    // The account route has no API key; a strategy match here would send the
+    // query to /user/balance with a credential the provider cannot present.
+    expect(matchStrategy("deepseek-account")).toBeUndefined()
   })
 })
 

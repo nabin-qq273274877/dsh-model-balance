@@ -14,6 +14,7 @@
 | 供应商 | 查询接口 | 数据类型 | 状态 |
 |--------|---------|---------|------|
 | **DeepSeek** | `GET /user/balance` | 账户余额（¥） | ✅ 官方接口 |
+| **DeepSeek Account**（官方登录） | Host 账号服务 `get_user_summary` | 充值余额 + 赠金（¥） | ✅ 官方登录 |
 | **StepFun** | `GET /v1/accounts` | 账户余额（¥） | ✅ 官方接口 |
 | **Kimi Coding** | `GET /v1/usages` | 配额（7 天 + 5 小时） | ✅ 官方接口 |
 | **OpenRouter** | `GET /api/v1/auth/key` | Credit 余额 ($) | ✅ 官方接口 |
@@ -66,7 +67,8 @@ Kimi Coding 同时显示「7 天周额度」与「5 小时速率额度」的剩�
 
 - **浏览器**：渲染胶囊，在模型切换 / 对话结束 / 定时轮询 / 点击时触发查询
 - **宿主路由**（`/model-balance/query`）：从 DSH Credentials 解析供应商凭据，查询计费 API，缓存结果（成功 60 秒 / 失败 15 秒）
-- **凭据安全**：API Key 永远不会到达浏览器
+- **官方登录账号**：`deepseek-account` 这类路由没有 API Key（认证走登录凭据），宿主改为调用 DSH 账号服务读取 DeepSeek Platform 钱包（充值余额 + 赠金）；未登录时胶囊显示「点击登录查看」
+- **凭据安全**：API Key 与登录凭据都不会到达浏览器
 
 ## 安装
 

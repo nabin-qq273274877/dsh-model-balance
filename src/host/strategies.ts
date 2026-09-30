@@ -259,6 +259,20 @@ const ADAPTER_PREFIXES: readonly string[] = [
 ]
 
 /**
+ * Account providers: the route authenticates with a Host-managed sign-in
+ * grant (`x-dsh-auth-token`) instead of an API key, so it has no API-key
+ * billing endpoint at all.  Their balance is read through the Host account
+ * service (`ctx.get("deepseekAccount")`), never over the provider's own HTTP
+ * API — see `matchAccountProvider`.
+ *
+ * e.g. `dsh-llm-deepseek-account` registers the `deepseek-account` route
+ * ("DeepSeek Account"), which DSH composes as the default model provider.
+ */
+const ACCOUNT_PROVIDER_IDS: Record<string, string> = {
+  "deepseek-account": "deepseek-account",
+}
+
+/**
  * Providers whose balance can only be viewed through a web login (no API-key
  * billing endpoint).  The pill renders "click to log in and view" and opens
  * the console URL in a new page.
@@ -394,6 +408,34 @@ export function matchStrategy(
         }
       }
     }
+  }
+
+  return undefined
+}
+
+/**
+ * Resolve a provider to the Host account service that owns its balance, if it
+ * is an account (sign-in grant) provider rather than an API-key provider.
+ *
+ * Account routes carry no API key, so `matchStrategy` deliberately declines
+ * them; callers must query the account service instead.
+ *
+ * @param providerId - The provider group ID from the model directory.
+ * @returns The account provider's canonical ID, or `undefined` when the
+ *          provider is not an account route.
+ */
+export function matchAccountProvider(providerId: string): string | undefined {
+  const lower = providerId.toLowerCase()
+  const direct = ACCOUNT_PROVIDER_IDS[lower]
+  if (direct !== undefined) return direct
+
+  // Adapter-prefixed wrapper (e.g. vision-toolkit-deepseek-account) is still
+  // billed to the same account grant as the underlying provider.
+  for (const prefix of ADAPTER_PREFIXES) {
+    if (!lower.startsWith(prefix)) continue
+    const wrapped = ACCOUNT_PROVIDER_IDS[providerId.slice(prefix.length).toLowerCase()]
+    if (wrapped !== undefined) return wrapped
+    break
   }
 
   return undefined
