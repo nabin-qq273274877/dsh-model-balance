@@ -48,7 +48,7 @@ Kimi Coding shows both the 7-day weekly quota and the 5-hour rate-limit as remai
 
 <p align="center"><img src="docs/images/login-required.png" alt="Login to view" width="720"></p>
 
-Qwen (Bailian Token Plan) and Xiaomi MiMo have no API balance endpoint — clicking opens the console in a **new page**.
+Qwen (Bailian Token Plan) and Xiaomi MiMo have no API balance endpoint — clicking opens the console in a **new page**. The same state appears for **DeepSeek Account** while no official sign-in is stored; once signed in it shows the wallet balance.
 
 ### Not supported
 

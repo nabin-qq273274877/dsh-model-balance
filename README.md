@@ -48,7 +48,7 @@ Kimi Coding 同时显示「7 天周额度」与「5 小时速率额度」的剩�
 
 <p align="center"><img src="docs/images/login-required.png" alt="登录查看" width="720"></p>
 
-千问（百炼 Token Plan）、小米 MiMo 等无 API 余额接口，点击在**新页面**打开对应控制台。
+千问（百炼 Token Plan）、小米 MiMo 等无 API 余额接口，点击在**新页面**打开对应控制台。**DeepSeek Account**（官方登录）在尚未登录时也是这个状态，登录后即显示钱包余额。
 
 ### 暂不支持
 
